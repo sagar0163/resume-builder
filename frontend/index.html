@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder - Create Professional Resumes</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        dark: '#0f0f0f',
+                        surface: '#1a1a1a'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #0f0f0f; color: white; font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="bg-surface border-b border-white/10 p-4">
+            <div class="max-w-6xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold">Resume Builder</h1>
+                <button @click="createResume" class="bg-primary px-4 py-2 rounded-xl">+ New Resume</button>
+            </div>
+        </header>
+
+        <main class="max-w-6xl mx-auto p-4">
+            <!-- Resume List -->
+            <div v-if="!selectedResume" class="grid grid-cols-3 gap-4">
+                <div v-for="r in resumes" :key="r.id" @click="selectResume(r.id)" class="bg-surface rounded-xl p-4 cursor-pointer hover:border-primary border border-transparent transition">
+                    <div class="font-bold">{{ r.name }}</div>
+                    <div class="text-sm text-gray-400">Template: {{ r.template }}</div>
+                    <div class="text-xs text-gray-500 mt-2">Updated: {{ formatDate(r.updated_at) }}</div>
+                </div>
+                <div v-if="resumes.length === 0" class="col-span-3 text-center py-12 text-gray-500">No resumes yet. Create one to get started!</div>
+            </div>
+
+            <!-- Resume Editor -->
+            <div v-else class="grid grid-cols-2 gap-6">
+                <!-- Form -->
+                <div class="space-y-4">
+                    <!-- Personal Info -->
+                    <div class="bg-surface rounded-xl p-4">
+                        <h3 class="font-bold mb-4">Personal Information</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input v-model="form.full_name" placeholder="Full Name" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                            <input v-model="form.email" placeholder="Email" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                            <input v-model="form.phone" placeholder="Phone" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                            <input v-model="form.address" placeholder="Address" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                            <input v-model="form.linkedin" placeholder="LinkedIn" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                            <input v-model="form.github" placeholder="GitHub" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                        </div>
+                        <textarea v-model="form.summary" placeholder="Professional Summary" class="w-full mt-3 bg-dark border border-white/10 rounded-lg px-3 py-2" rows="3"></textarea>
+                        <button @click="savePersonalInfo" class="mt-3 bg-primary px-4 py-2 rounded-lg">Save</button>
+                    </div>
+
+                    <!-- Experience -->
+                    <div class="bg-surface rounded-xl p-4">
+                        <h3 class="font-bold mb-4">Experience</h3>
+                        <div v-for="(exp, i) in form.experiences" :key="i" class="mb-4 p-3 bg-dark rounded-lg">
+                            <input v-model="exp.position" placeholder="Position" class="w-full mb-2 bg-surface border border-white/10 rounded px-3 py-2">
+                            <input v-model="exp.company" placeholder="Company" class="w-full mb-2 bg-surface border border-white/10 rounded px-3 py-2">
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <input v-model="exp.start_date" placeholder="Start Date" class="bg-surface border border-white/10 rounded px-3 py-2">
+                                <input v-model="exp.end_date" placeholder="End Date" class="bg-surface border border-white/10 rounded px-3 py-2">
+                            </div>
+                            <textarea v-model="exp.description" placeholder="Description" class="w-full bg-surface border border-white/10 rounded px-3 py-2" rows="2"></textarea>
+                            <button @click="removeExperience(i)" class="mt-2 text-red-400 text-sm">Remove</button>
+                        </div>
+                        <button @click="addExperience" class="text-primary">+ Add Experience</button>
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="bg-surface rounded-xl p-4">
+                        <h3 class="font-bold mb-4">Skills</h3>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span v-for="(skill, i) in form.skills" :key="i" class="bg-primary/20 text-primary px-3 py-1 rounded-full flex items-center gap-2">
+                                {{ skill.name }}
+                                <button @click="removeSkill(i)" class="text-primary hover:text-white">×</button>
+                            </span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input v-model="newSkill" @keyup.enter="addSkill" placeholder="Add skill" class="flex-1 bg-dark border border-white/10 rounded-lg px-3 py-2">
+                            <select v-model="skillProficiency" class="bg-dark border border-white/10 rounded-lg px-3 py-2">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                            <button @click="addSkill" class="bg-primary px-4 py-2 rounded-lg">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div class="bg-surface rounded-xl p-4">
+                        <h3 class="font-bold mb-4">Education</h3>
+                        <div v-for="(edu, i) in form.education" :key="i" class="mb-4 p-3 bg-dark rounded-lg">
+                            <input v-model="edu.institution" placeholder="Institution" class="w-full mb-2 bg-surface border border-white/10 rounded px-3 py-2">
+                            <input v-model="edu.degree" placeholder="Degree" class="w-full mb-2 bg-surface border border-white/10 rounded px-3 py-2">
+                            <button @click="removeEducation(i)" class="mt-2 text-red-400 text-sm">Remove</button>
+                        </div>
+                        <button @click="addEducation" class="text-primary">+ Add Education</button>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="bg-white text-black rounded-xl p-8 min-h-[800px]">
+                    <div class="text-center border-b pb-4 mb-4">
+                        <h2 class="text-2xl font-bold">{{ form.full_name || 'Your Name' }}</h2>
+                        <p class="text-gray-600">{{ form.email }} | {{ form.phone }}</p>
+                        <p class="text-gray-600">{{ form.address }}</p>
+                    </div>
+                    <div v-if="form.summary" class="mb-4">
+                        <h3 class="font-bold border-b mb-2">Summary</h3>
+                        <p class="text-sm">{{ form.summary }}</p>
+                    </div>
+                    <div v-if="form.experiences.length" class="mb-4">
+                        <h3 class="font-bold border-b mb-2">Experience</h3>
+                        <div v-for="(exp, i) in form.experiences" :key="i" class="mb-2">
+                            <div class="font-semibold">{{ exp.position }} at {{ exp.company }}</div>
+                            <div class="text-sm text-gray-600">{{ exp.start_date }} - {{ exp.end_date }}</div>
+                            <p class="text-sm">{{ exp.description }}</p>
+                        </div>
+                    </div>
+                    <div v-if="form.skills.length" class="mb-4">
+                        <h3 class="font-bold border-b mb-2">Skills</h3>
+                        <p>{{ form.skills.map(s => s.name).join(', ') }}</p>
+                    </div>
+                    <div v-if="form.education.length">
+                        <h3 class="font-bold border-b mb-2">Education</h3>
+                        <div v-for="(edu, i) in form.education" :key="i" class="mb-2">
+                            <div class="font-semibold">{{ edu.degree }}</div>
+                            <div class="text-sm text-gray-600">{{ edu.institution }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button v-if="selectedResume" @click="selectedResume = null" class="mt-4 bg-surface px-4 py-2 rounded-xl">← Back to List</button>
+        </main>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+        const API = 'http://localhost:5000/api';
+
+        createApp({
+            setup() {
+                const resumes = ref([]);
+                const selectedResume = ref(null);
+                const form = ref({ full_name: '', email: '', phone: '', address: '', linkedin: '', github: '', summary: '', experiences: [], skills: [], education: [] });
+                const newSkill = ref('');
+                const skillProficiency = ref('intermediate');
+
+                const loadResumes = async () => {
+                    resumes.value = await (await fetch(API + '/resumes')).json();
+                };
+
+                const createResume = async () => {
+                    const name = prompt('Resume name:') || 'Untitled';
+                    const res = await fetch(API + '/resumes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    const r = await res.json();
+                    await loadResumes();
+                    selectResume(r.id);
+                };
+
+                const selectResume = async (id) => {
+                    selectedResume.value = id;
+                    const res = await fetch(API + '/resumes/' + id);
+                    const data = await res.json();
+                    form.value = {
+                        full_name: data.personal_info?.full_name || '',
+                        email: data.personal_info?.email || '',
+                        phone: data.personal_info?.phone || '',
+                        address: data.personal_info?.address || '',
+                        linkedin: data.personal_info?.linkedin || '',
+                        github: data.personal_info?.github || '',
+                        summary: data.personal_info?.summary || '',
+                        experiences: data.experiences || [],
+                        skills: data.skills || [],
+                        education: data.education || []
+                    };
+                };
+
+                const savePersonalInfo = async () => {
+                    await fetch(API + '/resumes/' + selectedResume.value + '/personal-info', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(form.value)
+                    });
+                    alert('Saved!');
+                };
+
+                const addExperience = () => form.value.experiences.push({ company: '', position: '', start_date: '', end_date: '', description: '' });
+                const removeExperience = (i) => form.value.experiences.splice(i, 1);
+                const addEducation = () => form.value.education.push({ institution: '', degree: '', field_of_study: '' });
+                const removeEducation = (i) => form.value.education.splice(i, 1);
+                const addSkill = async () => {
+                    if (!newSkill.value) return;
+                    form.value.skills.push({ name: newSkill.value, proficiency: skillProficiency.value });
+                    await fetch(API + '/resumes/' + selectedResume.value + '/skills', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newSkill.value, proficiency: skillProficiency.value })
+                    });
+                    newSkill.value = '';
+                };
+                const removeSkill = (i) => form.value.skills.splice(i, 1);
+                const formatDate = (d) => new Date(d).toLocaleDateString();
+
+                onMounted(loadResumes);
+                return { resumes, selectedResume, form, newSkill, skillProficiency, createResume, selectResume, savePersonalInfo, addExperience, removeExperience, addEducation, removeEducation, addSkill, removeSkill, formatDate };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
