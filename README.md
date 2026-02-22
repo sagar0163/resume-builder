@@ -6,17 +6,20 @@
   <img src="https://img.shields.io/badge/vue-3-green.svg" alt="Vue">
 </p>
 
-Create professional resumes with multiple templates. Export to PDF.
+Create professional resumes with AI-powered features. Export to PDF.
 
 ## Features
 
-- Create multiple resumes
-- Personal information management
-- Work experience entries
-- Education history
-- Skills with proficiency levels
-- Live preview
-- Multiple templates
+- ✅ Create multiple resumes
+- ✅ Personal information management
+- ✅ Work experience entries
+- ✅ Education history
+- ✅ Skills with proficiency levels
+- ✅ Live preview
+- ✅ Multiple templates
+- ✅ **AI Magic Importer** - Parse raw text into resume
+- ✅ **AI Resume Scorer** - ATS optimization score
+- ✅ **AI Cover Letter** - Generate matching cover letters
 
 ## Quick Start
 
