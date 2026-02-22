@@ -20,9 +20,11 @@ def create_app():
     # Register blueprints
     from routes.resume import resume_bp
     from routes.templates import templates_bp
+    from routes.ai import ai_bp
     
     app.register_blueprint(resume_bp, url_prefix='/api')
     app.register_blueprint(templates_bp, url_prefix='/api')
+    app.register_blueprint(ai_bp, url_prefix='/api')
     
     # Create tables
     with app.app_context():
