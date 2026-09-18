@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from services.ai_service import AIResumeService
+from extensions import limiter
 
 ai_bp = Blueprint('ai', __name__)
 
 
 @ai_bp.route('/ai/parse', methods=['POST'])
+@limiter.limit("5 per minute")
 def parse_resume():
     """Parse raw text into resume data"""
     try:
@@ -25,6 +27,7 @@ def parse_resume():
 
 
 @ai_bp.route('/ai/score', methods=['POST'])
+@limiter.limit("5 per minute")
 def score_resume():
     """Score resume for ATS optimization"""
     try:
@@ -44,6 +47,7 @@ def score_resume():
 
 
 @ai_bp.route('/ai/rephrase', methods=['POST'])
+@limiter.limit("5 per minute")
 def rephrase_experience():
     """Rephrase experience bullet points"""
     try:
@@ -64,6 +68,7 @@ def rephrase_experience():
 
 
 @ai_bp.route('/ai/cover-letter', methods=['POST'])
+@limiter.limit("5 per minute")
 def generate_cover_letter():
     """Generate matching cover letter"""
     try:

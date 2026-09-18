@@ -80,3 +80,33 @@ DELETE /resumes/:id/skills/:skill_id
 GET /templates
 Response: [{ id, name, description }]
 ```
+
+### AI Features (Rate Limited: 5 requests per minute per IP)
+
+#### Parse Resume
+```
+POST /ai/parse
+Body: { "text": "Raw resume text..." }
+Response: { "personal_info": {...}, "experiences": [...], ... }
+```
+
+#### Score Resume
+```
+POST /ai/score
+Body: { "resume_data": {...} }
+Response: { "score": 85, "feedback": [...] }
+```
+
+#### Rephrase Experience
+```
+POST /ai/rephrase
+Body: { "description": "Did some things with code..." }
+Response: { "rephrased": "Engineered scalable solutions..." }
+```
+
+#### Generate Cover Letter
+```
+POST /ai/cover-letter
+Body: { "resume_data": {...}, "job_description": "..." }
+Response: { "cover_letter": "Dear Hiring Manager..." }
+```

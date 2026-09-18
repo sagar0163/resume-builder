@@ -17,6 +17,9 @@ def create_app():
     db.init_app(app)
     CORS(app)
     
+    from extensions import limiter
+    limiter.init_app(app)
+    
     # Register blueprints
     from routes.resume import resume_bp
     from routes.templates import templates_bp
