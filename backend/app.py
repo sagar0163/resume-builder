@@ -15,7 +15,10 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app)
+    
+    # Configure CORS to only allow specific trusted domains
+    allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5173').split(',')
+    CORS(app, origins=allowed_origins)
     
     from extensions import limiter
     limiter.init_app(app)
