@@ -1,7 +1,7 @@
 // AI Features JavaScript Module
 // Add to frontend/index.html for Magic Import and Resume Scoring
 
-const aiFeatures = {
+export const aiFeatures = {
     API_URL: 'http://localhost:5000/api',
     
     // Parse raw text into resume data
@@ -72,4 +72,4 @@ const aiFeatures = {
 };
 
 // Export for use
-window.aiFeatures = aiFeatures;
+
