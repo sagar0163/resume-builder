@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from models import Resume, PersonalInfo, Experience, Education, Skill, Certification, Language, Project
 from sqlalchemy.orm import selectinload
@@ -7,9 +8,10 @@ resume_bp = Blueprint('resume', __name__)
 
 
 @resume_bp.route('/resumes', methods=['GET'])
+@jwt_required()
 def get_resumes():
     """Get all resumes"""
-    resumes = Resume.query.order_by(Resume.updated_at.desc()).all()
+    resumes = Resume.query.filter_by(user_id=get_jwt_identity()).order_by(Resume.updated_at.desc()).all()
     return jsonify([{
         'id': r.id,
         'name': r.name,
@@ -20,10 +22,11 @@ def get_resumes():
 
 
 @resume_bp.route('/resumes', methods=['POST'])
+@jwt_required()
 def create_resume():
     """Create a new resume"""
     data = request.json
-    resume = Resume(name=data.get('name', 'Untitled Resume'))
+    resume = Resume(name=data.get('name', 'Untitled Resume'), user_id=get_jwt_identity())
     db.session.add(resume)
     db.session.commit()
     
@@ -40,6 +43,7 @@ def create_resume():
 
 
 @resume_bp.route('/resumes/<int:resume_id>', methods=['GET'])
+@jwt_required()
 def get_resume(resume_id):
     """Get a single resume with all details"""
     resume = Resume.query.options(
@@ -50,7 +54,7 @@ def get_resume(resume_id):
         selectinload(Resume.certifications),
         selectinload(Resume.languages),
         selectinload(Resume.projects)
-    ).get_or_404(resume_id)
+    ).filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     
     return jsonify({
         'id': resume.id,
@@ -114,9 +118,10 @@ def get_resume(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>', methods=['PUT'])
+@jwt_required()
 def update_resume(resume_id):
     """Update a resume"""
-    resume = Resume.query.get_or_404(resume_id)
+    resume = Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     
     if 'name' in data:
@@ -129,9 +134,10 @@ def update_resume(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>', methods=['DELETE'])
+@jwt_required()
 def delete_resume(resume_id):
     """Delete a resume"""
-    resume = Resume.query.get_or_404(resume_id)
+    resume = Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     db.session.delete(resume)
     db.session.commit()
     return jsonify({'message': 'Resume deleted'})
@@ -139,9 +145,10 @@ def delete_resume(resume_id):
 
 # Personal Info
 @resume_bp.route('/resumes/<int:resume_id>/personal-info', methods=['PUT'])
+@jwt_required()
 def update_personal_info(resume_id):
     """Update personal information"""
-    resume = Resume.query.get_or_404(resume_id)
+    resume = Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     
     if resume.personal_info:
@@ -157,6 +164,7 @@ def update_personal_info(resume_id):
 
 # Experience
 @resume_bp.route('/resumes/<int:resume_id>/experiences', methods=['POST'])
+@jwt_required()
 def add_experience(resume_id):
     """Add experience"""
     data = request.json
@@ -167,9 +175,11 @@ def add_experience(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/experiences/<int:exp_id>', methods=['PUT'])
+@jwt_required()
 def update_experience(resume_id, exp_id):
     """Update experience"""
-    experience = Experience.query.get_or_404(exp_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    experience = Experience.query.filter_by(id=exp_id, resume_id=resume_id).first_or_404()
     data = request.json
     for key, value in data.items():
         setattr(experience, key, value)
@@ -178,9 +188,11 @@ def update_experience(resume_id, exp_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/experiences/<int:exp_id>', methods=['DELETE'])
+@jwt_required()
 def delete_experience(resume_id, exp_id):
     """Delete experience"""
-    experience = Experience.query.get_or_404(exp_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    experience = Experience.query.filter_by(id=exp_id, resume_id=resume_id).first_or_404()
     db.session.delete(experience)
     db.session.commit()
     return jsonify({'message': 'Experience deleted'})
@@ -188,6 +200,7 @@ def delete_experience(resume_id, exp_id):
 
 # Education
 @resume_bp.route('/resumes/<int:resume_id>/education', methods=['POST'])
+@jwt_required()
 def add_education(resume_id):
     """Add education"""
     data = request.json
@@ -198,9 +211,11 @@ def add_education(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/education/<int:edu_id>', methods=['DELETE'])
+@jwt_required()
 def delete_education(resume_id, edu_id):
     """Delete education"""
-    education = Education.query.get_or_404(edu_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    education = Education.query.filter_by(id=edu_id, resume_id=resume_id).first_or_404()
     db.session.delete(education)
     db.session.commit()
     return jsonify({'message': 'Education deleted'})
@@ -208,6 +223,7 @@ def delete_education(resume_id, edu_id):
 
 # Skills
 @resume_bp.route('/resumes/<int:resume_id>/skills', methods=['POST'])
+@jwt_required()
 def add_skill(resume_id):
     """Add skill"""
     data = request.json
@@ -218,9 +234,11 @@ def add_skill(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/skills/<int:skill_id>', methods=['DELETE'])
+@jwt_required()
 def delete_skill(resume_id, skill_id):
     """Delete skill"""
-    skill = Skill.query.get_or_404(skill_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    skill = Skill.query.filter_by(id=skill_id, resume_id=resume_id).first_or_404()
     db.session.delete(skill)
     db.session.commit()
     return jsonify({'message': 'Skill deleted'})
@@ -228,8 +246,10 @@ def delete_skill(resume_id, skill_id):
 
 # Certifications
 @resume_bp.route('/resumes/<int:resume_id>/certifications', methods=['POST'])
+@jwt_required()
 def add_certification(resume_id):
     """Add certification"""
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     cert = Certification(resume_id=resume_id, **data)
     db.session.add(cert)
@@ -238,9 +258,11 @@ def add_certification(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/certifications/<int:cert_id>', methods=['DELETE'])
+@jwt_required()
 def delete_certification(resume_id, cert_id):
     """Delete certification"""
-    cert = Certification.query.get_or_404(cert_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    cert = Certification.query.filter_by(id=cert_id, resume_id=resume_id).first_or_404()
     db.session.delete(cert)
     db.session.commit()
     return jsonify({'message': 'Certification deleted'})
@@ -248,8 +270,10 @@ def delete_certification(resume_id, cert_id):
 
 # Languages
 @resume_bp.route('/resumes/<int:resume_id>/languages', methods=['POST'])
+@jwt_required()
 def add_language(resume_id):
     """Add language"""
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     lang = Language(resume_id=resume_id, **data)
     db.session.add(lang)
@@ -258,9 +282,11 @@ def add_language(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/languages/<int:lang_id>', methods=['DELETE'])
+@jwt_required()
 def delete_language(resume_id, lang_id):
     """Delete language"""
-    lang = Language.query.get_or_404(lang_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    lang = Language.query.filter_by(id=lang_id, resume_id=resume_id).first_or_404()
     db.session.delete(lang)
     db.session.commit()
     return jsonify({'message': 'Language deleted'})
@@ -268,6 +294,7 @@ def delete_language(resume_id, lang_id):
 
 # Projects
 @resume_bp.route('/resumes/<int:resume_id>/projects', methods=['POST'])
+@jwt_required()
 def add_project(resume_id):
     """Add project"""
     data = request.json
@@ -278,9 +305,11 @@ def add_project(resume_id):
 
 
 @resume_bp.route('/resumes/<int:resume_id>/projects/<int:proj_id>', methods=['DELETE'])
+@jwt_required()
 def delete_project(resume_id, proj_id):
     """Delete project"""
-    project = Project.query.get_or_404(proj_id)
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
+    project = Project.query.filter_by(id=proj_id, resume_id=resume_id).first_or_404()
     db.session.delete(project)
     db.session.commit()
     return jsonify({'message': 'Project deleted'})
