@@ -1,8 +1,16 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from services.ai_service import AIResumeService
 from extensions import limiter
 
 ai_bp = Blueprint('ai', __name__)
+
+
+def get_ai_service():
+    """Get or create AIResumeService instance in application context."""
+    if 'ai_service' not in current_app.extensions:
+        # Initialize once per application context
+        current_app.extensions['ai_service'] = AIResumeService()
+    return current_app.extensions['ai_service']
 
 
 @ai_bp.route('/ai/parse', methods=['POST'])
@@ -16,7 +24,7 @@ def parse_resume():
         if not raw_text:
             return jsonify({'error': 'No text provided'}), 400
         
-        ai_service = AIResumeService()
+        ai_service = get_ai_service()
         result = ai_service.parse_resume_text(raw_text)
         
         return jsonify(result)
@@ -36,7 +44,7 @@ def score_resume():
         if not resume_data:
             return jsonify({'error': 'No resume data provided'}), 400
         
-        ai_service = AIResumeService()
+        ai_service = get_ai_service()
         result = ai_service.score_resume(resume_data)
         
         return jsonify(result)
@@ -57,7 +65,7 @@ def rephrase_experience():
         if not description:
             return jsonify({'error': 'No description provided'}), 400
         
-        ai_service = AIResumeService()
+        ai_service = get_ai_service()
         result = ai_service.rephrase_experience(description)
         
         return jsonify({'rephrased': result})
@@ -79,7 +87,7 @@ def generate_cover_letter():
         if not job_description:
             return jsonify({'error': 'No job description provided'}), 400
         
-        ai_service = AIResumeService()
+        ai_service = get_ai_service()
         result = ai_service.generate_cover_letter(resume_data, job_description)
         
         return jsonify({'cover_letter': result})
