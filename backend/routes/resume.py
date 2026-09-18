@@ -167,6 +167,7 @@ def update_personal_info(resume_id):
 @jwt_required()
 def add_experience(resume_id):
     """Add experience"""
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     experience = Experience(resume_id=resume_id, **data)
     db.session.add(experience)
@@ -203,6 +204,7 @@ def delete_experience(resume_id, exp_id):
 @jwt_required()
 def add_education(resume_id):
     """Add education"""
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     education = Education(resume_id=resume_id, **data)
     db.session.add(education)
@@ -226,6 +228,7 @@ def delete_education(resume_id, edu_id):
 @jwt_required()
 def add_skill(resume_id):
     """Add skill"""
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     skill = Skill(resume_id=resume_id, **data)
     db.session.add(skill)
@@ -297,6 +300,7 @@ def delete_language(resume_id, lang_id):
 @jwt_required()
 def add_project(resume_id):
     """Add project"""
+    Resume.query.filter_by(id=resume_id, user_id=get_jwt_identity()).first_or_404()
     data = request.json
     project = Project(resume_id=resume_id, **data)
     db.session.add(project)
