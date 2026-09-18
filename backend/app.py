@@ -20,11 +20,17 @@ def create_app():
     from extensions import limiter
     limiter.init_app(app)
     
+    from flask_jwt_extended import JWTManager
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'jwt-super-secret')
+    jwt = JWTManager(app)
+    
     # Register blueprints
+    from routes.auth import auth_bp
     from routes.resume import resume_bp
     from routes.templates import templates_bp
     from routes.ai import ai_bp
     
+    app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(resume_bp, url_prefix='/api')
     app.register_blueprint(templates_bp, url_prefix='/api')
     app.register_blueprint(ai_bp, url_prefix='/api')
