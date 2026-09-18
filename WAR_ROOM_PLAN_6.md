@@ -1,3 +1,0 @@
-- [x] Refactor AIResumeService instantiation to use application context (lazy loading singleton via current_app).
-- [x] Replace local instantiation of AIResumeService in parse_resume, score_resume, rephrase_experience, and generate_cover_letter with the context-based function.
-- [ ] Run backend tests if any exist.
