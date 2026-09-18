@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from models import Resume, PersonalInfo, Experience, Education, Skill, Certification, Language, Project
+from sqlalchemy.orm import selectinload
 
 resume_bp = Blueprint('resume', __name__)
 
@@ -41,7 +42,15 @@ def create_resume():
 @resume_bp.route('/resumes/<int:resume_id>', methods=['GET'])
 def get_resume(resume_id):
     """Get a single resume with all details"""
-    resume = Resume.query.get_or_404(resume_id)
+    resume = Resume.query.options(
+        selectinload(Resume.personal_info),
+        selectinload(Resume.experiences),
+        selectinload(Resume.education),
+        selectinload(Resume.skills),
+        selectinload(Resume.certifications),
+        selectinload(Resume.languages),
+        selectinload(Resume.projects)
+    ).get_or_404(resume_id)
     
     return jsonify({
         'id': resume.id,
